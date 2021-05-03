@@ -97,4 +97,22 @@ def set_values_demo(r):
     
 
 
+# working with strings
+
+def string_values_demo(r):
+    """Manipulate strings as integers."""
+    # Create string value
+    r.set('index', '1')
+    r.get('index')
+
+    # Increment string by 1
+    r.incr('index')
+    
+
+    # Decrement string by 1
+    r.decr('index')
    
+
+    # Increment string by 3
+    r.incrby('index', 3)
+    
