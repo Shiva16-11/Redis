@@ -1,14 +1,16 @@
 import redis
 import time
 
-r = redis.Redis()
+r = redis.StrictRedis()
 
 r.set('startFlag', 0)
 r.set('lapValue', 1)
-r.hmset('racer1_locations', {})
-r.hmset('racer2_locations', {})
-r.set('slope', [10, 11])
-r.set('intercept', [10, 11])
+r.hmset('racer1_locations', {"racer_id": "1"})
+r.hmset('racer2_locations', {"racer_id": "2"})
+
+r.rpush('slope', 10, 11)
+
+r.rpush('intercept', 10, 11)
 r.set('startPosition', (
         r.get('intercept')[1] - r.get('intercept')[0])/(r.get('slope')[1] - r.get('slope')[1]))
 
@@ -20,12 +22,12 @@ output = []
 while lap_value <= 10:
     index = 0
     if distance > 10:
-        r.set('lapValue', r.get('lapValue') + 1)
-        r.set('slope', slope.pop())
-        r.set('intercept', intercept.pop())
+        r.set('lapValue', int(r.get('lapValue')) + 1)
+        r.rpush('slope', slope.pop())
+        r.rpush('intercept', intercept.pop())
         r.set('startPosition', (
-                float(r.get('intercept')[1]) - float(r.get('intercept')[0])) /
-              (float(r.get('slope')[1]) - float(r.get('slope')[1])))
+            (float(r.lindex('intercept', 1)) - float(r.lindex('intercept', 0))) / (
+                float(r.lindex('slope', 1)) - float(r.lindex('slope', 0)))))
 
         lap_value = int(r.get('lapValue'))
         distance = 0
@@ -33,7 +35,7 @@ while lap_value <= 10:
     time.sleep(1)
     while lap_value == int(r.get('lapValue')) and distance <= 10:
         try:
-            d = r.get('racer1_locations').get('lap')[index]
+            d = r.hget('racer1_locations').get('lap')[index]
             D = r.get('racer2_locations').get('lap')[index]
             distance = d - D
             output.append(lap_value, d, D, distance)
