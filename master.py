@@ -1,10 +1,11 @@
+import datetime
 import redis
 import time
 import random
 
-r = redis.StrictRedis()
+r = redis.StrictRedis(db=1, charset="utf-8", decode_responses=True)
 
-r.set('startFlag', 0)
+
 r.set('lapValue', 1)
 r.lpush('racer1_locations' + str(r.get('lapValue')), "0")
 r.lpush('racer2_locations' + str(r.get('lapValue')), "0")
@@ -15,6 +16,7 @@ r.lpush('racer1intercept', 10)
 r.lpush('racer2intercept', 11)
 print()
 r.set('startPosition', -1)
+r.set('startFlag', 0)
 
 # slope = [[1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [9, 10]]
 # intercept = [[1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [9, 10]]
@@ -23,11 +25,14 @@ distance = 0
 
 output = []
 while lap_value <= 10:
-    index = 0
+
     if distance > 10:
+        print("lap value is", r.get('lapValue'))
         r.set('lapValue', int(r.get('lapValue')) + 1)
+        print("lap value is ", r.get('lapValue'))
         slope_racer1 = random.randint(1, 100)
         slope_racer2 = random.randint(1, 100)
+        # avoid m1 == m2
         while slope_racer1 == slope_racer2:
             slope_racer2 = random.randint(1, 100)
         r.rpush('racer1slope', slope_racer1)
@@ -42,9 +47,7 @@ while lap_value <= 10:
         except Exception as e:
             print(e)
             value = 0
-
         r.set('startPosition', value)
-
         lap_value = int(r.get('lapValue'))
         print(distance)
         distance = 0
@@ -52,15 +55,14 @@ while lap_value <= 10:
     time.sleep(1)
     while lap_value == int(r.get('lapValue')) and distance <= 10:
         try:
-            print(lap_value, distance)
             d = r.lindex('racer1_locations' + str((r.get('lapValue'))), 0)
             D = r.lindex('racer2_locations' + str((r.get('lapValue'))), 0)
             distance = abs(float(d) - float(D))
-            output.append((lap_value, d, D, distance))
-            index += 1
+            output.append((lap_value, d, D, distance, datetime.datetime.now()))
+            print((lap_value, d, D, distance))
         except Exception as e:
             print(e)
-            break
+            continue
 
 print(output)
 
