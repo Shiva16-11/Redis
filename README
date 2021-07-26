@@ -1,7 +1,7 @@
 ------------------Installation Procedure ---------------------------------------
 
 1. Install and Run redis server
-    Ensure the redis server is running at 127.0.0.1:6379
+    Ensure the redis server is running at 127.0.0.1:6379 (link to download ans install redis https://redis.io/download)
 
 2. Clone the repository from Github
 3. Open three terminals
@@ -15,5 +15,6 @@ dependencies requirement --
 python 3.8
 redis latest release
 install the following module if not present redis, datetime, random
+(link to install python redis module)
 
 -----------------------------------------------------------------------------------
