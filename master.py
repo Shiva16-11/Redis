@@ -2,13 +2,14 @@ import datetime
 import redis
 import time
 import random
+from redis import ConnectionPool
 
-r = redis.StrictRedis(db=1, charset="utf-8", decode_responses=True)
+pool = ConnectionPool(host='127.0.0.1', port=6379, db=0,  decode_responses=True)
+r = redis.StrictRedis(connection_pool=pool)
 
-
-r.set('lapValue', 1)
-r.lpush('racer1_locations' + str(r.get('lapValue')), "0")
-r.lpush('racer2_locations' + str(r.get('lapValue')), "0")
+r.lpush('lapValue', 1)
+r.lpush('racer1_locations' + str(r.lindex('lapValue', 0)), "0")
+r.lpush('racer2_locations' + str(r.lindex('lapValue', 0)), "0")
 
 r.lpush('racer1slope', 10)
 r.lpush('racer2slope', 11)
@@ -18,8 +19,6 @@ print()
 r.set('startPosition', -1)
 r.set('startFlag', 0)
 
-# slope = [[1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [9, 10]]
-# intercept = [[1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [9, 10]]
 lap_value = 1
 distance = 0
 
@@ -27,16 +26,17 @@ output = []
 while lap_value <= 10:
 
     if distance > 10:
-        print("lap value is", r.get('lapValue'))
-        r.set('lapValue', int(r.get('lapValue')) + 1)
-        print("lap value is ", r.get('lapValue'))
+
+        temp = int(r.lindex('lapValue', 0)) + 1
+        r.lpush('lapValue', temp)
+        time.sleep(1)
         slope_racer1 = random.randint(1, 100)
         slope_racer2 = random.randint(1, 100)
         # avoid m1 == m2
         while slope_racer1 == slope_racer2:
             slope_racer2 = random.randint(1, 100)
-        r.rpush('racer1slope', slope_racer1)
-        r.rpush('racer2slope', slope_racer2)
+        r.lpush('racer1slope', slope_racer1)
+        r.lpush('racer2slope', slope_racer2)
         intercept_racer1 = random.randint(2, 120)
         intercept_racer2 = random.randint(1, 150)
         r.lpush('racer1intercept', intercept_racer1)
@@ -48,23 +48,33 @@ while lap_value <= 10:
             print(e)
             value = 0
         r.set('startPosition', value)
-        lap_value = int(r.get('lapValue'))
-        print(distance)
+        lap_value = int(r.lindex('lapValue', 0))
+
         distance = 0
 
-    time.sleep(1)
-    while lap_value == int(r.get('lapValue')) and distance <= 10:
+    while lap_value == int(r.lindex('lapValue', 0)) and distance <= 10:
+
         try:
-            d = r.lindex('racer1_locations' + str((r.get('lapValue'))), 0)
-            D = r.lindex('racer2_locations' + str((r.get('lapValue'))), 0)
+
+            d = r.lindex('racer1_locations' + str(r.lindex('lapValue', 0)), 0)
+            D = r.lindex('racer2_locations' + str(r.lindex('lapValue', 0)), 0)
+            print("Location of racer1 in lap {}".format(d))
+            print("Location of racer2 in lap {}".format(D))
             distance = abs(float(d) - float(D))
-            output.append((lap_value, d, D, distance, datetime.datetime.now()))
-            print((lap_value, d, D, distance))
+            output.append((lap_value, d, D, abs(distance), datetime.datetime.now()))
+            print("distance between racers in lap {} is {}".format(lap_value, abs(distance)))
+
         except Exception as e:
-            print(e)
+            if int(r.lindex('lapValue', 0)) > 10:
+                break
+            print(e, datetime.datetime.now())
+            time.sleep(3)
             continue
+    if int(r.lindex('lapValue', 0)) > 10:
+        break
 
 print(output)
+
 
 
 

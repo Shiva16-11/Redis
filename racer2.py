@@ -1,28 +1,32 @@
 import redis
 import time
+import datetime
+from redis import ConnectionPool
 
-r = redis.StrictRedis(db=1, charset="utf-8", decode_responses=True)
-r.flushall()
+pool = ConnectionPool(host='127.0.0.1', port=6379, db=0,  decode_responses=True)
+r = redis.StrictRedis(connection_pool=pool)
+r.flushall(asynchronous=False)
 
 while not r.get('startFlag'):
-    time.sleep(0.5)
-lap = int(r.get('lapValue'))
+    continue
+lap = int(r.lindex('lapValue', 0))
 log = []
 print("Racer2 Initialised")
 while lap <= 10:
+
     x = float(r.get('startPosition'))
-    while lap == int(r.get('lapValue')):
+    while lap == int(r.lindex('lapValue', 0)):
         slope = int(r.lindex('racer2slope', 0))
         c = int(r.lindex('racer2intercept', 0))
         y = slope * x + c
         # print(y)
-        r.lpush('racer2_locations' + str(r.get('lapValue')), y)
-        print("lap value is", lap)
-        lap = int(r.get('lapValue'))
-        print("lap value from redis", int(r.get('lapValue')))
+        r.lpush('racer2_locations' + str(r.lindex('lapValue', 0)), y)
+        lap = int(r.lindex('lapValue', 0))
         time.sleep(0.05)
         x += 1
-print(log)
+    print("slope = {}, intercept = {} for lap = {} racer_name = {}".format(slope, c, lap, "Racer2"))
+    lap = int(r.lindex('lapValue', 0))
+print("Exit")
 
 
 
