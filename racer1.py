@@ -2,6 +2,7 @@ import redis
 import time
 
 from redis import ConnectionPool
+
 pool = ConnectionPool(host='127.0.0.1', port=6379, db=0,  decode_responses=True)
 r = redis.StrictRedis(connection_pool=pool)
 r.flushall(asynchronous=False)

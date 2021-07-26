@@ -2,11 +2,10 @@
 
 1. Install and Run redis server
     Ensure the redis server is running at 127.0.0.1:6379
-    On redis-cli run "select 3" without quotes
 
 2. Clone the repository from Github
 3. Open three terminals
-4. Cd into the directory where the clones files are present
+4. Cd into the directory where the cloned files are present
 5. Initiate the racer1 by using the command python3 racer1.py in terminal 1
 6. Initiate the racer2 by using the command python3 racer2.py in terminal 2
 7. Initiate the master by using the command python3 master.py in terminal 3
